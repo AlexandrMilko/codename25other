@@ -3,10 +3,6 @@ import sys
 import bpy
 
 
-def open_blend_file(filepath):
-    bpy.ops.wm.open_mainfile(filepath=filepath)
-
-
 def setup_camera(angles, location):
     # Create a new camera object
     cam_data = bpy.data.cameras.new(name='Camera')
@@ -18,7 +14,7 @@ def setup_camera(angles, location):
     # Set the camera's location and rotation
     cam_obj.location = location
     cam_obj.rotation_euler = angles
-    cam_obj.data.lens = 20
+    cam_obj.data.lens = 14
     scene.camera = cam_obj
 
 
@@ -36,13 +32,34 @@ def setup_light():
     light_data.color = (1, 1, 1)
 
 
-def save_render(path, resolution_x, resolution_y):
+def add_3d_model(path, location, angles, scale):
+    # Import the 3D model
+    bpy.ops.wm.usd_import(filepath=path)
+
+    # Get the imported objects
+    imported_objs = bpy.context.selected_objects
+
+    # Create and link an empty parent object
+    furniture = bpy.data.objects.new("Furniture", None)
+    scene.collection.objects.link(furniture)
+
+    # Parent imported objects to the empty object
+    for obj in imported_objs:
+        obj.parent = furniture
+
+    # Set location, rotation, and scale
+    furniture.location = location
+    furniture.rotation_euler = angles
+    furniture.scale = scale
+
+
+def save_render(path, res_x, res_y):
     # Set render settings
     scene.render.image_settings.file_format = 'PNG'
     scene.render.image_settings.color_mode = 'RGBA'
     scene.render.filepath = path
-    scene.render.resolution_x = resolution_x
-    scene.render.resolution_y = resolution_y
+    scene.render.resolution_x = res_x
+    scene.render.resolution_y = res_y
     scene.render.film_transparent = True
 
     # Render the scene
@@ -59,7 +76,7 @@ if __name__ == "__main__":
     camera_location = json.loads(args[4])
     resolution_x = json.loads(args[5])
     resolution_y = json.loads(args[6])
-    blend_file_path = args[7]
+    obj_path = args[7]
     render_path = args[8]
 
     print("I START RENDERING WITH FOLLOWING SETTINGS: ")
@@ -70,18 +87,19 @@ if __name__ == "__main__":
     print(f"camera_location = {camera_location}")
     print(f"resolution_x = {resolution_x}")
     print(f"resolution_y = {resolution_y}")
-    print(f"blend_file_path = {blend_file_path}")
+    print(f"obj_path = {obj_path}")
     print(f"render_path = {render_path}")
 
-    # Open the .blend file
-    open_blend_file(blend_file_path)
+    # Select and delete all default objects in the scene
+    bpy.ops.object.select_all(action='SELECT')
+    bpy.ops.object.delete()
 
-    # Get the current scene
+    # Get current scene, add camera/light, import model, and render
     scene = bpy.context.scene
 
-    # Setup camera and light in the opened .blend file scene
     setup_camera(camera_angles, camera_location)
     setup_light()
 
-    # Save the render with specified settings
+    add_3d_model(obj_path, obj_offsets, obj_angles, obj_scale)
+
     save_render(render_path, resolution_x, resolution_y)
