@@ -13,24 +13,24 @@ CORS(app)
 def render_image():
     data = request.json
     blender_script_path = os.path.abspath('blender_script.py')
-    obj_path = os.path.abspath(data['model_path'])
-    render_path = os.path.abspath('render.png')
+    render_path = os.path.abspath('visuals/render.png')
+    blend_file_path = os.path.abspath('visuals/scene.blend')
 
     blender_cmd = [
-        "blender",
+        "/Applications/Blender.app/Contents/MacOS/Blender",
         "--background",
         "--python",
         blender_script_path,
         "--",
-        json.dumps(data['obj_angles']),
-        json.dumps(data['obj_scale']),
-        json.dumps(data['obj_offsets']),
-        json.dumps(data['camera_angles']),
-        json.dumps(data['camera_location']),
-        json.dumps(data['resolution_x']),
-        json.dumps(data['resolution_y']),
-        obj_path,
-        render_path
+        json.dumps({
+            "render_path": render_path,
+            "blend_file_path": blend_file_path,
+            "camera_location": data['camera_location'],
+            "camera_angles": data['camera_angles'],
+            "resolution_x": data['resolution_x'],
+            "resolution_y": data['resolution_y'],
+            "objects": data['objects']
+        })
     ]
 
     subprocess.run(blender_cmd, check=True)
@@ -42,4 +42,4 @@ def render_image():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5002)
+    app.run(port=5002)
