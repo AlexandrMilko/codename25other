@@ -103,7 +103,7 @@ if __name__ == "__main__":
     setup_light()
 
     for obj in objects:
-        add_3d_model(obj["obj_path"], obj["obj_offsets"], obj["obj_angles"], obj["obj_scale"])
+        add_3d_model(obj["model_path"], obj["obj_offsets"], obj["obj_angles"], obj["obj_scale"])
 
     save_render(render_path, resolution_x, resolution_y)
     save_blend_file(blend_file_path)
