@@ -24,9 +24,9 @@ def test_api():
 
     # JSON data to send in the POST request
     data = {
-        'room_choice': 'kitchen',
+        'room_choice': 'bedroom',
         'style_budget_choice': 'Contemporary, High-End',
-        'input_image': get_encoded_image('visuals/before.png.png')
+        'input_image': get_encoded_image('/home/stage/Desktop/results_bedroom/2_empty.jpg')
     }
 
     # Sending POST request to the Flask app

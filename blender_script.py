@@ -28,7 +28,8 @@ def setup_light():
 
     # Set light location, intensity, and color
     light_obj.location = (2, 2, 5)
-    light_data.energy = 1000.0
+    light_data.energy = 4000.0
+    light_data.shadow_soft_size = 11
     light_data.color = (1, 1, 1)
 
 
