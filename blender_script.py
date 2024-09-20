@@ -14,7 +14,7 @@ def setup_camera(angles, location):
     # Set the camera's location and rotation
     cam_obj.location = location
     cam_obj.rotation_euler = angles
-    cam_obj.data.lens = 20
+    cam_obj.data.lens = 23
     bpy.context.scene.camera = cam_obj
 
 
