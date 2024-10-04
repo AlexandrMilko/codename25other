@@ -69,7 +69,7 @@ def update_geo_node_tree(node_tree):
 
     # Mesh to Points node
     mesh_to_points_node, node_x_location = create_node(node_tree, "GeometryNodeMeshToPoints", node_x_location, node_location_step_x)
-    mesh_to_points_node.inputs[3].default_value = 0.01
+    mesh_to_points_node.inputs[3].default_value = 0.008
     node_tree.links.new(in_node.outputs["Geometry"], mesh_to_points_node.inputs['Mesh'])
 
     # Set Material node

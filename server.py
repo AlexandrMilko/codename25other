@@ -17,7 +17,7 @@ def render_image():
     blend_file_path = os.path.abspath('visuals/scene.blend')
 
     blender_cmd = [
-        '/Applications/Blender.app/Contents/MacOS/Blender',
+        'blender',
         '--background',
         '--python',
         blender_script_path,
