@@ -1,7 +1,93 @@
 import json
-import os.path
+import os
 import sys
 import bpy
+
+
+def clean_scene():
+    if bpy.context.active_object and bpy.context.active_object.mode == "EDIT":
+        bpy.ops.object.editmode_toggle()
+
+    # make sure none of the objects are hidden from the viewport, selection, or disabled
+    for obj in bpy.data.objects:
+        obj.hide_set(False)
+        obj.hide_select = False
+        obj.hide_viewport = False
+
+        # select all the object and delete them
+    bpy.ops.object.select_all(action="SELECT")
+    bpy.ops.object.delete()
+
+    # find all the collections and remove them
+    collection_names = [col.name for col in bpy.data.collections]
+    for name in collection_names:
+        bpy.data.collections.remove(bpy.data.collections[name])
+
+    # in the case when you modify the world shader
+    # delete and recreate the world object
+    world_names = [world.name for world in bpy.data.worlds]
+    for name in world_names:
+        bpy.data.worlds.remove(bpy.data.worlds[name])
+    # create a new world data block
+    bpy.ops.world.new()
+    bpy.context.scene.world = bpy.data.worlds["World"]
+
+    # Remove all orphan data blocks
+    bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
+
+
+def create_node(node_tree, type_name, node_x_location, node_location_step_x=0):
+    # Create and position a new node in the node tree
+    node_obj = node_tree.nodes.new(type=type_name)
+    node_obj.location.x = node_x_location
+    node_x_location += node_location_step_x
+    return node_obj, node_x_location
+
+
+def create_material(name="Material"):
+    # Create a new material and enable nodes
+    material = bpy.data.materials.new(name=name)
+    material.use_nodes = True
+    material.node_tree.nodes.new(type="ShaderNodeAttribute")
+
+    # Set attribute node and link to BSDF base color
+    principled_bsdf_node = material.node_tree.nodes["Principled BSDF"]
+    attribute_node = material.node_tree.nodes["Attribute"]
+    attribute_node.attribute_name = "Col"
+    material.node_tree.links.new(attribute_node.outputs["Color"], principled_bsdf_node.inputs['Base Color'])
+
+    return material
+
+
+def update_geo_node_tree(node_tree):
+    # Add and link geometry nodes for mesh and material processing
+    in_node = node_tree.nodes["Group Input"]
+    out_node = node_tree.nodes["Group Output"]
+
+    node_x_location = -175
+    node_location_step_x = 175
+
+    # Mesh to Points node
+    mesh_to_points_node, node_x_location = create_node(node_tree, "GeometryNodeMeshToPoints", node_x_location, node_location_step_x)
+    mesh_to_points_node.inputs[3].default_value = 0.01
+    node_tree.links.new(in_node.outputs["Geometry"], mesh_to_points_node.inputs['Mesh'])
+
+    # Set Material node
+    set_material_node, node_x_location = create_node(node_tree, "GeometryNodeSetMaterial", node_x_location, node_location_step_x)
+    set_material_node.inputs[2].default_value = bpy.data.materials["Material"]
+    node_tree.links.new(mesh_to_points_node.outputs["Points"], set_material_node.inputs['Geometry'])
+    node_tree.links.new(set_material_node.outputs["Geometry"], out_node.inputs['Geometry'])
+
+
+def import_room(path):
+    # Import a room model and apply geometry node setup
+    bpy.ops.wm.ply_import(filepath=path)
+    bpy.context.scene.render.engine = 'CYCLES'
+    bpy.ops.node.new_geometry_nodes_modifier()
+
+    node_tree = bpy.data.node_groups["Geometry Nodes"]
+    create_material()
+    update_geo_node_tree(node_tree)
 
 
 def setup_camera(angles, location):
@@ -34,7 +120,7 @@ def setup_light():
     light_data.color = (1, 1, 1)
 
 
-def add_3d_model(path, location, angles, scale):
+def add_furniture(path, location, angles, scale):
     # Import the 3D model
     bpy.ops.wm.usd_import(filepath=path)
 
@@ -82,30 +168,21 @@ if __name__ == "__main__":
     resolution_x = data["resolution_x"]
     resolution_y = data["resolution_y"]
     render_path = data["render_path"]
+    room_point_cloud_path = data['room_point_cloud_path']
     blend_file_path = data["blend_file_path"]
     objects = data["objects"]
 
-    print("I START RENDERING WITH FOLLOWING SETTINGS: ")
-    print(f"camera_location = {camera_location}")
-    print(f"camera_angles = {camera_angles}")
-    print(f"resolution_x = {resolution_x}")
-    print(f"resolution_y = {resolution_y}")
-    print(f"render_path = {render_path}")
-    print(f"blend_file_path = {blend_file_path}")
-    print(f"objects = {objects}")
+    clean_scene()
 
-    # Select and delete all default objects in the scene
-    bpy.ops.object.select_all(action='SELECT')
-    bpy.ops.object.delete()
-
-    # Get current scene, add camera/light, import models, and render
+    # Get a current scene, add camera/light, import models, and render
     scene = bpy.context.scene
+    import_room(room_point_cloud_path)
 
     setup_camera(camera_angles, camera_location)
     setup_light()
 
     for obj in objects:
-        add_3d_model(os.path.abspath(obj["model_path"]), obj["obj_offsets"], obj["obj_angles"], obj["obj_scale"])
+        add_furniture(os.path.abspath(obj["obj_path"]), obj["obj_offsets"], obj["obj_angles"], obj["obj_scale"])
 
     save_render(render_path, resolution_x, resolution_y)
     save_blend_file(blend_file_path)

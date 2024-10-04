@@ -17,29 +17,30 @@ def render_image():
     blend_file_path = os.path.abspath('visuals/scene.blend')
 
     blender_cmd = [
-        "blender",
-        "--background",
-        "--python",
+        '/Applications/Blender.app/Contents/MacOS/Blender',
+        '--background',
+        '--python',
         blender_script_path,
-        "--",
+        '--',
         json.dumps({
-            "render_path": render_path,
-            "blend_file_path": blend_file_path,
-            "camera_location": data['camera_location'],
-            "camera_angles": data['camera_angles'],
-            "resolution_x": data['resolution_x'],
-            "resolution_y": data['resolution_y'],
-            "objects": data['objects']
+            'render_path': render_path,
+            'blend_file_path': blend_file_path,
+            'room_point_cloud_path': data['room_point_cloud_path'],
+            'camera_location': data['camera_location'],
+            'camera_angles': data['camera_angles'],
+            'resolution_x': data['resolution_x'],
+            'resolution_y': data['resolution_y'],
+            'objects': data['objects']
         })
     ]
 
     subprocess.run(blender_cmd, check=True)
 
-    with open(render_path, "rb") as image_file:
+    with open(render_path, 'rb') as image_file:
         encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
 
     return jsonify({'image_base64': encoded_string})
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5002)
