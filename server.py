@@ -16,13 +16,7 @@ def render_image():
     render_path = os.path.abspath('visuals/render.png')
     blend_file_path = os.path.abspath('visuals/scene.blend')
 
-    blender_cmd = [
-        'blender',
-        '--background',
-        '--python',
-        blender_script_path,
-        '--',
-        json.dumps({
+    data = json.dumps({
             'render_path': render_path,
             'blend_file_path': blend_file_path,
             'room_point_cloud_path': data['room_point_cloud_path'],
@@ -31,10 +25,9 @@ def render_image():
             'resolution_x': data['resolution_x'],
             'resolution_y': data['resolution_y'],
             'objects': data['objects']
-        })
-    ]
+    })
 
-    subprocess.run(blender_cmd, check=True)
+    subprocess.run(['python', blender_script_path, data], check=True)
 
     with open(render_path, 'rb') as image_file:
         encoded_string = base64.b64encode(image_file.read()).decode('utf-8')

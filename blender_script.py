@@ -82,7 +82,6 @@ def update_geo_node_tree(node_tree):
 def import_room(path):
     # Import a room model and apply geometry node setup
     bpy.ops.wm.ply_import(filepath=path)
-    bpy.context.scene.render.engine = 'CYCLES'
     bpy.ops.node.new_geometry_nodes_modifier()
 
     node_tree = bpy.data.node_groups["Geometry Nodes"]
@@ -140,9 +139,26 @@ def add_furniture(path, location, angles, scale):
     furniture.rotation_euler = angles
     furniture.scale = scale
 
+def use_gpu():
+    bpy.context.scene.render.engine = 'CYCLES'
+    bpy.context.preferences.addons[
+        "cycles"
+    ].preferences.compute_device_type = "CUDA"  # or "OPENCL"
+
+    # Set the device and feature set
+    bpy.context.scene.cycles.device = "GPU"
+
+    # get_devices() to let Blender detects GPU device
+    bpy.context.preferences.addons["cycles"].preferences.get_devices()
+    print(bpy.context.preferences.addons["cycles"].preferences.compute_device_type)
+    for d in bpy.context.preferences.addons["cycles"].preferences.devices:
+        d["use"] = 1  # Using all devices, include GPU and CPU
+        print(d["name"], d["use"])
 
 def save_render(path, res_x, res_y):
     # Set render settings
+    bpy.context.scene.render.engine = 'CYCLES'
+    use_gpu()
     scene.render.image_settings.file_format = 'PNG'
     scene.render.image_settings.color_mode = 'RGBA'
     scene.render.filepath = path
@@ -160,8 +176,8 @@ def save_blend_file(path):
 
 if __name__ == "__main__":
     # Parse command-line arguments
-    args = sys.argv[sys.argv.index("--") + 1:]
-    data = json.loads(args[0])
+    args = sys.argv
+    data = json.loads(args[1])
 
     camera_location = data["camera_location"]
     camera_angles = data["camera_angles"]
