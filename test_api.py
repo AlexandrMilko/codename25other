@@ -20,13 +20,13 @@ def get_encoded_image(image_path):
 
 def test_api():
     # URL of the Flask app
-    url = 'http://127.0.0.1:5000/ai/get_insane_image_1337'
+    url = 'http://127.0.0.1:5001/ai/get_insane_image_1337'
 
     # JSON data to send in the POST request
     data = {
         'room_choice': 'bedroom',
         'style_budget_choice': 'Contemporary, High-End',
-        'input_image': get_encoded_image('/home/stage/Desktop/results_bedroom/2_empty.jpg')
+        'input_image': get_encoded_image('visuals/before.png')
     }
 
     # Sending POST request to the Flask app
