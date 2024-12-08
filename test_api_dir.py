@@ -52,15 +52,19 @@ def process_images_in_directory(input_dir, output_dir):
                 print(f"Processing {filename} - Done")
                 # Create the output filename by appending 'after' before the extension
                 base_name, ext = os.path.splitext(filename)
-                output_filename = f"{base_name}_after{ext}"
-                output_path = os.path.join(output_dir, output_filename)
                 # Save the encoded image to the output directory
-                save_encoded_image(response.json()['output_image'], output_path)
+                i = 0
+                for encoded_image in response.json().values():
+                    output_filename = f"after_{i}_{ext}"
+                    os.makedirs(os.path.join(output_dir, f"{base_name}"), exist_ok=True)
+                    output_path = os.path.join(output_dir, f"{base_name}", output_filename)
+                    save_encoded_image(encoded_image, output_path)
+                    i += 1
             else:
                 print(f"Failed to process {filename}. Status code: {response.status_code}")
-            time.sleep(30)
+            time.sleep(10)
 
 if __name__ == '__main__':
-    input_directory = '/home/stage/Desktop/testphotos'
-    output_directory = '/home/stage/Desktop/testphotos'
+    input_directory = r'C:\Users\Sasha\Desktop\testphotos\bedroom'
+    output_directory = r'C:\Users\Sasha\Desktop\testphotos\results_test_2'
     process_images_in_directory(input_directory, output_directory)

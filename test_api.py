@@ -37,7 +37,11 @@ def test_api():
         print('Done')
     else:
         print('Failed to get response. Status code:', response.status_code)
-    save_encoded_image(response.json()['output_image'], 'visuals/after.jpg')
+    i = 0
+    print(response.json().keys())
+    for encoded_image in response.json().values():
+        save_encoded_image(encoded_image, f'visuals/after{i}.jpg')
+        i += 1
 
 
 if __name__ == '__main__':
